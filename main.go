@@ -73,11 +73,12 @@ func (db *DataBase) commit() error {
 
 func (db *DataBase) rollback() error {
 
-	//resey everything
+	//reset everything
 	if db.transactionState {
 
 		db.transactionState = false
 		db.transactionData = make(map[string]int)
+		return nil
 	}
 
 	return errors.New("There is no open transaction")
@@ -85,68 +86,54 @@ func (db *DataBase) rollback() error {
 
 func main() {
 
-	// // should return null, because A doesn’t exist in the DB yet
-	// inmemoryDB.get(“A”)
-
-	// // should throw an error because a transaction is not in progress
-	// inmemoryDB.put(“A”, 5);
-
-	// // starts a new transaction
-
-	// // set’s value of A to 5, but its not committed yet
-
-	// set’s value of A to 5, but its not committed yet
-	//inmemoryDB.put(“A”, 5);
-
-	// should return null, because updates to A are not committed yet
-
-	// update A’s value to 6 within the transaction
-
-	// commits the open transaction
-
+	//created the DB
 	db := createDB()
 
+	// should return null, because A doesn’t exist in the DB yet
 	val := db.get("A")
 
 	if val == 0 {
 		fmt.Println("Could not get value")
 	}
 
+	// should throw an error because a transaction is not in progress
 	err := db.put("A", 5)
 
 	if err != nil {
 		fmt.Println("Transaction is not in progress")
 	}
 
-	// inmemoryDB.begin_transaction();
+	// starts a new transaction
 	err = db.begin_transaction()
 
 	if err != nil {
 		fmt.Println("Transaction is already in progress")
 	}
 
-	// inmemoryDB.put(“A”, 5);
+	// set’s value of A to 5, but its not committed yet
 	err = db.put("A", 5)
 
 	if err != nil {
 		fmt.Println("Transaction is not in progress")
 	}
 
-	//inmemoryDB.get(“A”)
+	// should return null, because updates to A are not committed yet
 	val = db.get("A")
 
 	if val == 0 {
 		fmt.Println("Value has not been committed")
+	} else {
+		fmt.Println("This is the value: ", val)
 	}
 
-	//inmemoryDB.put(“A”, 6)
+	// update A’s value to 6 within the transaction
 	err = db.put("A", 6)
 
 	if err != nil {
 		fmt.Println("Transaction is not in progress")
-	}
+	} 
 
-	//inmemoryDB.commit()
+	// commits the open transaction
 	db.commit()
 
 	// should return 6, that was the last value of A to be committed
@@ -182,6 +169,7 @@ func main() {
 	//Restart everything again
 	db.begin_transaction()
 
+	// Set key B’s value to 10 within the transaction
 	err = db.put("B", 10)
 
 	if err != nil {
@@ -190,12 +178,14 @@ func main() {
 
 	err = db.rollback()
 
-	if err != nil {
-		fmt.Println("Changes could not be made")
+	// Rollback the transaction - revert any changes made to B
+	if err == nil {
+		fmt.Println("Changes have been reverted")
 	}
 
 	val = db.get("B")
 
+	// Should return null because changes to B were rolled back
 	if val == 0 {
 		fmt.Println("Changes have been rolled back")
 	}
